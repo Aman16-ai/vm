@@ -1,0 +1,17 @@
+{
+  "name": "vehical-managment",
+  "version": "1.0.0",
+  "description": "A simple vehicle management application",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Aman saxena and Devesh singh",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1692.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "joi": "^17.13.3"
+  }
+}
