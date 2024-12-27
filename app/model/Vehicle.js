@@ -1,43 +1,51 @@
 class Vehicle {
-    constructor(modelName, company, engine, basePrice, maxPrice) {
-        this.modelName = modelName;
-        this.company = company;
-        this.engine = engine;
-        this.basePrice = basePrice;
-        this.maxPrice = maxPrice;
+  constructor(manufacture, models = [], variants = []) {
+    this.manufacture = manufacture;
+    this.models = models; // Array of model strings
+    this.variants = variants; // Array of variant strings
+  }
+
+  validate() {
+    // Validate manufacture
+    if (!this.manufacture) {
+      throw new Error("Manufacture is required");
+    }
+    if (typeof this.manufacture !== "string") {
+      throw new Error("Manufacture must be a string");
     }
 
-    validate() {
-        if (!this.modelName || !this.company || !this.engine) {
-            throw new Error('Missing required fields');
-        }
-        if (this.basePrice <= 0 || this.maxPrice <= 0) {
-            throw new Error('Prices must be positive numbers');
-        }
-        if (this.maxPrice < this.basePrice) {
-            throw new Error('Max price cannot be less than base price');
-        }
+    // Validate models
+    if (!Array.isArray(this.models)) {
+      throw new Error("Models must be an array of strings");
+    }
+    if (!this.models.every((model) => typeof model === "string")) {
+      throw new Error("All models must be strings");
     }
 
-    toDynamoDBFormat() {
-        return {
-            model_name: { S: this.modelName },
-            company: { S: this.company },
-            engine: { S: this.engine },
-            base_price: { N: this.basePrice.toString() },
-            max_price: { N: this.maxPrice.toString() }
-        };
+    // Validate variants
+    if (!Array.isArray(this.variants)) {
+      throw new Error("Variants must be an array of strings");
     }
+    if (!this.variants.every((variant) => typeof variant === "string")) {
+      throw new Error("All variants must be strings");
+    }
+  }
 
-    static fromDynamoDBFormat(item) {
-        return new Vehicle(
-            item.model_name.S,
-            item.company.S,
-            item.engine.S,
-            parseFloat(item.base_price.N),
-            parseFloat(item.max_price.N)
-        );
-    }
+  toDynamoDBFormat() {
+    return {
+      manufacture: { S: this.manufacture },
+      models: { L: this.models.map((model) => ({ S: model })) },
+      variants: { L: this.variants.map((variant) => ({ S: variant })) },
+    };
+  }
+
+  static fromDynamoDBFormat(item) {
+    return new Vehicle(
+      item.manufacture.S,
+      item.models.L.map((model) => model.S),
+      item.variants.L.map((variant) => variant.S)
+    );
+  }
 }
 
 module.exports = Vehicle;

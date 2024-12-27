@@ -1,11 +1,20 @@
-const express = require("express")
-const vehicleSchema = require("../middlewares/validation/schema/VehicleSchema")
-const {validateRequest} = require("../middlewares/validation")
-const {getAllVehicle,createVehicle,updateVehicle} = require("../controllers/vehicleController")
+const express = require("express");
+const vehicleSchema = require("../middlewares/validation/schema/Vehicle.schema");
+const { validateRequest } = require("../middlewares/validation");
+const VehicleController = require("../controllers/vehicle.controller");
 
-const router = express.Router()
+const router = express.Router();
 
-router.get("/",getAllVehicle)
-router.post("/",validateRequest(vehicleSchema.create),createVehicle)
-router.patch("/:modelName",validateRequest(vehicleSchema.update),updateVehicle)
-module.exports = router
+router.get("/", VehicleController.getAllVehicles.bind(VehicleController));
+router.post("/", validateRequest(vehicleSchema.create), VehicleController.createVehicle.bind(VehicleController));
+router.patch(
+  "/:manufacture",
+  validateRequest(vehicleSchema.update),
+  VehicleController.updateVehicle.bind(VehicleController)
+);
+router.delete(
+    "/:manufacture",
+    VehicleController.deleteVehicleById.bind(VehicleController)   
+)
+
+module.exports = router;

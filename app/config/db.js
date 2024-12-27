@@ -1,9 +1,7 @@
-const AWS = require('aws-sdk')
-
-const dynamoDB = new AWS.DynamoDB({
-    region: 'ap-south-1',
-    accessKeyId: process.env.accessKeyId,
-    secretAccessKey: process.env.secretAccessKey
+const AWS = require("aws-sdk");
+AWS.config.update({
+  region: "local",
+  endpoint: "http://localhost:8000",
 });
-
-module.exports = dynamoDB
+const dynamoDB = new AWS.DynamoDB();
+module.exports = dynamoDB;

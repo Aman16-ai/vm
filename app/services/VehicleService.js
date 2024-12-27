@@ -7,11 +7,9 @@ class VehicleService {
 
     async createVehicle(vehicleData) {
         const vehicle = new Vehicle(
-            vehicleData.modelName,
-            vehicleData.company,
-            vehicleData.engine,
-            vehicleData.basePrice,
-            vehicleData.maxPrice
+            vehicleData.manufacture,
+            vehicleData.models,
+            vehicleData.variants,
         );
 
         return await this.vehicleRepository.createVehicle(vehicle);
@@ -23,6 +21,10 @@ class VehicleService {
 
     async updateVehicle(key,updates) {
         return await this.vehicleRepository.updateVehicle(key,updates)
+    }
+
+    async deleteVehicleById(id) {
+        return await this.vehicleRepository.deleteVehicleById(id)
     }
 }
 

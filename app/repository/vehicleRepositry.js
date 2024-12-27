@@ -2,7 +2,7 @@ const IVehicleRepository = require("./IVehicleRepository");
 const DatabaseError = require("../Error/DatabaseError");
 const ConflictError = require("../Error/ConflictError");
 const Vehicle = require("../model/Vehicle");
-const marshallValue = require("../util/dynamoDataParser")
+const marshallValue = require("../util/dynamoDataParser");
 class VehicleReposirty extends IVehicleRepository {
   constructor(dynamoDB, tableName, logger) {
     super();
@@ -14,10 +14,14 @@ class VehicleReposirty extends IVehicleRepository {
   async createVehicle(vehicle) {
     try {
       // Validate vehicle instance
+      console.log(vehicle);
       vehicle.validate();
       // Check for existing vehicle
-      const existingVehicle = await this.getVehicleByModel(vehicle.modelName);
+      const existingVehicle = await this.getVehicleByManufacturer(
+        vehicle.manufacture
+      );
       if (existingVehicle) {
+        console.log("runnign");
         throw new ConflictError("Vehicle model already exists");
       }
 
@@ -26,7 +30,7 @@ class VehicleReposirty extends IVehicleRepository {
         TableName: this.tableName,
         Item: vehicle.toDynamoDBFormat(),
       };
-
+      console.log(params);
       await this.dynamoDB.putItem(params).promise();
       this.logger.info(`Vehicle created successfully: ${vehicle.modelName}`);
 
@@ -52,12 +56,12 @@ class VehicleReposirty extends IVehicleRepository {
     }
   }
 
-  async getVehicleByModel(modelName) {
+  async getVehicleByManufacturer(manufacture) {
     try {
       const params = {
         TableName: this.tableName,
         Key: {
-          model_name: { S: modelName },
+          manufacture: { S: manufacture },
         },
       };
 
@@ -69,9 +73,10 @@ class VehicleReposirty extends IVehicleRepository {
     }
   }
 
-  async updateVehicle(key,updates) {
+  async updateVehicle(key, updates) {
     try {
-        console.log(key)
+      console.log(key);
+
       let updateExpression = "SET";
       const expressionAttributeNames = {};
       const expressionAttributeValues = {};
@@ -84,32 +89,69 @@ class VehicleReposirty extends IVehicleRepository {
         const attributeName = `#field${index}`;
         const attributeValue = `:value${index}`;
 
+        // Append to the update expression
         updateExpression += ` ${attributeName} = ${attributeValue}${
           index !== Object.keys(updates).length - 1 ? "," : ""
         }`;
+
         expressionAttributeNames[attributeName] = field;
-        expressionAttributeValues[attributeValue] = marshallValue(value);
+
+        // Use specific marshalling for arrays
+        expressionAttributeValues[attributeValue] = Array.isArray(value)
+          ? { L: value.map((v) => ({ S: v })) } // List of strings
+          : marshallValue(value); // Use marshallValue for other types
       });
 
       // Remove trailing comma if last fields were skipped
       updateExpression = updateExpression.replace(/,\s*$/, "");
-      console.log(updateExpression)
+
+      console.log(updateExpression);
+
       const params = {
         TableName: this.tableName,
         Key: {
-            model_name : {S : key.modelName}
+          manufacture: { S: key.manufacture },
         },
         UpdateExpression: updateExpression,
         ExpressionAttributeNames: expressionAttributeNames,
         ExpressionAttributeValues: expressionAttributeValues,
         ReturnValues: "ALL_NEW",
       };
-      console.log(params)
+
+      console.log(params);
+
       const result = await this.dynamoDB.updateItem(params).promise();
-      console.log(result)
-      return result
+      console.log(result);
+
+      return result;
     } catch (error) {
       throw new DatabaseError(`Failed to update vehicle: ${error.message}`);
+    }
+  }
+
+  async deleteVehicleById(manufacture) {
+    try {
+      const params = {
+        TableName: this.tableName,
+        Key: {
+          manufacture: { S: manufacture },
+        },
+        ConditionExpression: "attribute_exists(manufacture)", // Ensure the item exists
+      };
+
+      await this.dynamoDB.deleteItem(params).promise();
+      this.logger.info(
+        `Vehicle with manufacture: ${manufacture} deleted successfully.`
+      );
+      return true;
+    } catch (error) {
+      this.logger.error(`Error deleting vehicle: ${error.message}`);
+      if (error.code === "ConditionalCheckFailedException") {
+        throw new DatabaseError(
+          `Vehicle with manufacture: ${manufacture} does not exist.`
+        );
+      }
+      throw new DatabaseError(`Failed to delete vehicle: ${error.message}`);
     }
   }
 }
