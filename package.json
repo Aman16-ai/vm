@@ -4,15 +4,20 @@
   "description": "A simple vehicle management application",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha --recursive --exit"
   },
   "author": "Aman saxena and Devesh singh",
   "license": "ISC",
   "dependencies": {
     "aws-sdk": "^2.1692.0",
+    "chai": "^5.1.2",
+    "chai-http": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "joi": "^17.13.3"
+    "joi": "^17.13.3",
+    "mocha": "^11.0.1",
+    "save-dev": "^0.0.1-security",
+    "sinon": "^19.0.2"
   }
 }
